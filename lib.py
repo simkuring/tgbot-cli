@@ -20,24 +20,28 @@ def sendMessage(chatId, text):
         return False
 
 def getMessage():
+    global lastMessageId
     chat = []
     data = {
         "offset":lastMessageId,
     }
-    try:
-        bot = requests.post(getMsgUrl,data=data)
-        if bot.status_code == 200:
-            msg = bot.json()
-            panjang = len(msg['result'])
-            for pesan in msg['result']:
+    bot = requests.post(getMsgUrl,data=data)
+    if bot.status_code == 200:
+        msg = bot.json()
+        panjang = len(msg['result'])
+        if (panjang > 0):
+            for i in range(panjang):
+                pesan = msg['result'][i]
+                room  = pesan["message"]["chat"]["title"].encode('utf-8')
+                from_ = pesan["message"]["from"]["username"].encode('utf-8')
+                text  = pesan["message"]["text"].encode('utf-8')
+                time  = pesan["message"]["date"]
                 result = {
-                    "room":pesan["message"]["chat"]["title"],
-                    "from":pesan["message"]["username"],
-                    "chat":pesan["message"]["text"],
-                    "time":pesan["message"]["date"]
+                    "room":room,
+                    "from":from_,
+                    "text":text,
+                    "time":time
                 }
                 chat.append(result)
             lastMessageId = msg['result'][panjang-1]['update_id'] + 1
-    except:
-        print ("Unexpected error:", sys.exc_info()[0])
     return chat
