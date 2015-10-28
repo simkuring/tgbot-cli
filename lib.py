@@ -1,25 +1,25 @@
 import requests
 import sys
 
-# config
-key = "106833625:AAEWW14xxZqrHdhkIbgtT9aYVPvUHAeS18w"
-
-# set url
-headers = {"Content-type": "application/x-www-form-urlencoded"}
-url = "https://api.telegram.org/bot"
-sendMsgUrl = url + key + "/sendMessage"
-getMsgUrl = url + key + "/getUpdates"
 lastMessageId = 0;
+url = "https://api.telegram.org/bot"
 
-def sendMessage(chatId, text):
-    data = {"chat_id":chatId,"text":text}
+def sendMessage(chatId, text, key):
+    sendMsgUrl = url + key + "/sendMessage"
+    data = {
+        "chat_id" : chatId,
+        "text" : text,
+        "parse_mode" : "markdown",
+        "disable_web_page_preview" : 1
+    }
     r = requests.post(sendMsgUrl,data=data)
     if r.status_code != 200:
         return True
     else:
         return False
 
-def getMessage():
+def getMessage(key):
+    getMsgUrl = url + key + "/getUpdates"
     global lastMessageId
     chat = []
     data = {
@@ -31,17 +31,20 @@ def getMessage():
         panjang = len(msg['result'])
         if (panjang > 0):
             for i in range(panjang):
-                pesan = msg['result'][i]
-                room  = pesan["message"]["chat"]["title"].encode('utf-8')
-                from_ = pesan["message"]["from"]["username"].encode('utf-8')
-                text  = pesan["message"]["text"].encode('utf-8')
-                time  = pesan["message"]["date"]
-                result = {
-                    "room":room,
-                    "from":from_,
-                    "text":text,
-                    "time":time
-                }
-                chat.append(result)
+                try:
+                    pesan = msg['result'][i]["message"]
+                    room  = pesan["chat"]["title"].encode('utf-8')
+                    from_ = pesan["from"]["username"].encode('utf-8')
+                    text  = pesan["text"].encode('utf-8')
+                    time  = pesan["date"]
+                    result = {
+                        "room":room,
+                        "from":from_,
+                        "text":text,
+                        "time":time
+                    }
+                    chat.append(result)
+                except:
+                    pass
             lastMessageId = msg['result'][panjang-1]['update_id'] + 1
     return chat
